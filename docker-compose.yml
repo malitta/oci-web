@@ -1,0 +1,84 @@
+services:
+    web:
+        build:
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: "${WWWGROUP}"
+        image: oci/app
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        ports:
+            - "${APP_PORT:-8080}:80"
+        environment:
+            WWWUSER: "${WWWUSER}"
+            LARAVEL_SAIL: 1
+            XDEBUG_MODE: "${SAIL_XDEBUG_MODE:-off}"
+            XDEBUG_CONFIG: "${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}"
+            IGNITION_LOCAL_SITES_PATH: "${PWD}"
+            PORT: 80
+            # WORKER_MODE: true
+        volumes:
+            - ".:/var/www/html"
+        networks:
+            - sail
+        depends_on:
+            - db
+        healthcheck:
+            test: ["CMD-SHELL", "curl --fail http://localhost/ || exit 1"]
+            interval: 5s
+            timeout: 5s
+            retries: 100
+            start_period: 20s
+    worker:
+        build:
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: "${WWWGROUP}"
+        image: oci/app
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        environment:
+            WWWUSER: "${WWWUSER}"
+            LARAVEL_SAIL: 1
+            XDEBUG_MODE: "${SAIL_XDEBUG_MODE:-off}"
+            XDEBUG_CONFIG: "${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}"
+            IGNITION_LOCAL_SITES_PATH: "${PWD}"
+            # PORT: 80
+            WORKER_MODE: true
+        volumes:
+            - ".:/var/www/html"
+        networks:
+            - sail
+        depends_on:
+            db:
+                condition: service_started
+            web:
+                condition: service_healthy
+                restart: true
+    db:
+        image: "mysql/mysql-server:8.0"
+        ports:
+            - "${FORWARD_DB_PORT:-3306}:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+            MYSQL_ROOT_HOST: "%"
+            MYSQL_DATABASE: "${DB_DATABASE}"
+            MYSQL_USER: "${DB_USERNAME}"
+            MYSQL_PASSWORD: "${DB_PASSWORD}"
+            MYSQL_ALLOW_EMPTY_PASSWORD: 1
+        volumes:
+            - "sail-mysql:/var/lib/mysql"
+            # - './docker/create-testing-database:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
+        networks:
+            - sail
+            # Start of Selection
+        healthcheck:
+            test: ["CMD-SHELL", "mysql -uroot -p${DB_PASSWORD} -e 'SELECT 1;'"]
+            retries: 5
+            timeout: 5s
+networks:
+    sail:
+        driver: bridge
+volumes:
+    sail-mysql:
+        driver: local

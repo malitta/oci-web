@@ -1,0 +1,48 @@
+# Laravel specific
+/vendor
+/node_modules
+/public/storage
+/public/build
+/public/hot
+/storage/*.key
+/storage/app/public
+/storage/framework/cache/data
+/storage/logs
+.env
+.env.backup
+.env.production
+/.phpunit.cache
+.phpactor.json
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+
+# Docker specific
+/.fleet
+docker-compose.override.yml
+docker-compose.dev.yml
+docker-compose.prod.yml
+docker-compose.test.yml
+docker/*.log
+docker/*.pid
+
+# IDE specific
+/.idea
+/.vscode 
+
+# Test coverage reports
+/coverage/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Composer specific
+composer.lock
+
+# Additional files from your project
+/public/js
+/public/css
